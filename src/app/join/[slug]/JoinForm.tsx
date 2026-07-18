@@ -18,6 +18,7 @@ export default function JoinForm({
     appointmentType: appointmentTypes[0] ?? "",
     preferredDays: [] as string[],
     preferredTime: "any",
+    preferredChannel: "whatsapp" as "whatsapp" | "sms",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -47,6 +48,7 @@ export default function JoinForm({
           appointmentType: form.appointmentType,
           preferredDays: form.preferredDays.join(",") || null,
           preferredTime: form.preferredTime,
+          preferredChannel: form.preferredChannel,
         }),
       });
       const data = await res.json();
@@ -67,11 +69,12 @@ export default function JoinForm({
         </div>
         <h2 className="text-xl font-bold text-slate-900 mb-2">You&apos;re on the list!</h2>
         <p className="text-slate-600 text-sm">
-          We&apos;ll text <strong>{form.patientPhone}</strong> as soon as a{" "}
+          We&apos;ll {form.preferredChannel === "whatsapp" ? "WhatsApp" : "text"}{" "}
+          <strong>{form.patientPhone}</strong> as soon as a{" "}
           <strong>{form.appointmentType}</strong> slot opens at {clinicName}.
         </p>
         <p className="text-slate-500 text-xs mt-4">
-          You&apos;ll have 15 minutes to confirm when we text you.
+          You&apos;ll have 15 minutes to confirm when we message you.
         </p>
       </div>
     );
@@ -102,6 +105,34 @@ export default function JoinForm({
           className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
         />
         <p className="text-xs text-slate-400 mt-1">We&apos;ll only use this to notify you about available slots</p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">How should we contact you? *</label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setForm((f) => ({ ...f, preferredChannel: "whatsapp" }))}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
+              form.preferredChannel === "whatsapp"
+                ? "bg-green-500 text-white border-green-500"
+                : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"
+            }`}
+          >
+            <span>💬</span> WhatsApp
+          </button>
+          <button
+            type="button"
+            onClick={() => setForm((f) => ({ ...f, preferredChannel: "sms" }))}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
+              form.preferredChannel === "sms"
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"
+            }`}
+          >
+            <span>📱</span> SMS
+          </button>
+        </div>
       </div>
 
       <div>

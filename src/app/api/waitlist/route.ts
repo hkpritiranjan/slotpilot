@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 // Public join (no auth required) - called from patient page
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { clinicId, patientName, patientPhone, appointmentType, preferredDays, preferredTime } = body;
+  const { clinicId, patientName, patientPhone, appointmentType, preferredDays, preferredTime, preferredChannel } = body;
 
   if (!clinicId || !patientName || !patientPhone || !appointmentType) {
     return Response.json({ error: "Missing required fields" }, { status: 400 });
@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
       appointmentType,
       preferredDays: preferredDays || null,
       preferredTime: preferredTime || "any",
+      preferredChannel: preferredChannel === "sms" ? "sms" : "whatsapp",
     },
   });
 

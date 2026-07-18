@@ -50,10 +50,11 @@ model WaitlistEntry {
   patientName     String
   patientPhone    String
   appointmentType String
-  preferredDays   String?
-  preferredTime   String         @default("any")
-  priority        Int            @default(0)
-  status          String         @default("waiting")
+  preferredDays    String?
+  preferredTime    String         @default("any")
+  preferredChannel String         @default("whatsapp")
+  priority         Int            @default(0)
+  status           String         @default("waiting")
   createdAt       DateTime       @default(now())
 
   notifications   Notification[]

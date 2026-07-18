@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { sendSms } from "./sms";
+import { sendMessage } from "./sms";
 
 const OFFER_WINDOW_MINUTES = 15;
 
@@ -63,11 +63,12 @@ export async function triggerWaitlistForSlot(slotId: string): Promise<{ notified
     `Hi ${candidate.patientName}! A ${slot.appointmentType} slot opened at ${slot.clinic.name} on ${datetime}. ` +
     `Reply YES to confirm or NO to skip. Offer expires in ${OFFER_WINDOW_MINUTES} minutes.`;
 
-  await sendSms({
+  await sendMessage({
     clinicId: slot.clinicId,
     to: candidate.patientPhone,
     body: message,
     tag: "waitlist_offer",
+    channel: (candidate.preferredChannel ?? "whatsapp") as "sms" | "whatsapp",
   });
 
   return { notified: true, patientName: candidate.patientName };
@@ -134,11 +135,13 @@ export async function handleWaitlistReply(
     });
 
     const datetime = formatDateTime(notification.slot.date, notification.slot.startTime);
-    await sendSms({
+    const ch = (notification.waitlistEntry.preferredChannel ?? "whatsapp") as "sms" | "whatsapp";
+    await sendMessage({
       clinicId: notification.slot.clinicId,
       to: notification.waitlistEntry.patientPhone,
       body: `Confirmed! Your ${notification.slot.appointmentType} appointment at ${notification.slot.clinic.name} is booked for ${datetime}. See you then!`,
       tag: "booking_confirmed",
+      channel: ch,
     });
 
     // Schedule reminders
@@ -151,11 +154,12 @@ export async function handleWaitlistReply(
       data: { status: "waiting" },
     });
 
-    await sendSms({
+    await sendMessage({
       clinicId: notification.slot.clinicId,
       to: notification.waitlistEntry.patientPhone,
       body: `No problem! You're still on the waitlist at ${notification.slot.clinic.name}. We'll notify you when the next slot opens.`,
       tag: "waitlist_declined",
+      channel: (notification.waitlistEntry.preferredChannel ?? "whatsapp") as "sms" | "whatsapp",
     });
 
     // Try next patient
@@ -177,19 +181,16 @@ async function createRemindersForSlot(slotId: string): Promise<void> {
   });
 }
 
-export async function processReminders(clinicId: string): Promise<{ sent: number }> {
+export async function processReminders(clinicId?: string): Promise<{ sent: number }> {
   const now = new Date();
   let sent = 0;
 
+  const slotFilter = clinicId
+    ? { clinicId, status: "booked", patientPhone: { not: null } }
+    : { status: "booked", patientPhone: { not: null } };
+
   const pendingReminders = await db.reminder.findMany({
-    where: {
-      status: "pending",
-      slot: {
-        clinicId,
-        status: "booked",
-        patientPhone: { not: null },
-      },
-    },
+    where: { status: "pending", slot: slotFilter },
     include: { slot: { include: { clinic: true } } },
   });
 
@@ -213,11 +214,12 @@ export async function processReminders(clinicId: string): Promise<{ sent: number
       `Reminder: Your ${slot.appointmentType} at ${slot.clinic.name} is ${hoursLabel} (${datetime}). ` +
       `Reply CANCEL to cancel.`;
 
-    await sendSms({
+    await sendMessage({
       clinicId: slot.clinicId,
       to: slot.patientPhone!,
       body,
       tag: `reminder_${reminder.type}`,
+      channel: "sms", // reminders go via SMS by default (no preferredChannel on Slot)
     });
 
     await db.reminder.update({

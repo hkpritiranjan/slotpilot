@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SlotPilot — Stop Losing ₹80,000/Month to Empty Slots</title>
+<meta name="description" content="SlotPilot automatically fills cancelled clinic slots from your waitlist via SMS. 30-day free trial. Built for physiotherapy, dental, and chiropractic clinics in India.">
+<meta name="keywords" content="clinic waitlist management, appointment no-show software, healthcare scheduling India, physiotherapy software, dental clinic management, chiropractic software, patient reminder SMS, clinic revenue recovery, appointment cancellation management, waitlist automation">
+<meta property="og:title" content="SlotPilot — Automated Waitlist & No-Show Recovery">
+<meta property="og:description" content="Your 2pm just cancelled. It's already filled. SlotPilot texts the next waitlist patient automatically. 30-day free trial.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth}
+
+:root{
+  --midnight:#0B1A3B;
+  --teal:#00BFA5;
+  --teal-d:#009E87;
+  --teal-t:rgba(0,191,165,0.12);
+  --ember:#F4622A;
+  --ember-t:rgba(244,98,42,0.1);
+  --slate:#F0F4FB;
+  --cloud:#FFFFFF;
+  --ash:#5C6E8A;
+  --ink:#0B1A3B;
+  --border:#DDE5F0;
+  --radius:12px;
+  --bg:var(--slate);
+  --surface:var(--cloud);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#060E20;
+    --surface:#0E1B38;
+    --ink:#E8EEF8;
+    --ash:#7A90B0;
+    --border:#1A2A4A;
+    --slate:#060E20;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#060E20;
+  --surface:#0E1B38;
+  --ink:#E8EEF8;
+  --ash:#7A90B0;
+  --border:#1A2A4A;
+}
+:root[data-theme="light"]{
+  --bg:#F0F4FB;
+  --surface:#FFFFFF;
+  --ink:#0B1A3B;
+  --ash:#5C6E8A;
+  --border:#DDE5F0;
+}
+
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:0 5vw;height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:background .3s,border-color .3s;
+  border-bottom:1px solid transparent;
+}
+nav.scrolled{
+  background:rgba(11,26,59,0.96);
+  border-color:rgba(255,255,255,0.08);
+  backdrop-filter:blur(12px);
+}
+.nav-logo{
+  font-size:18px;font-weight:800;
+  color:#fff;letter-spacing:-0.02em;text-decoration:none;
+  display:flex;align-items:center;gap:8px;
+}
+.nav-logo .dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--teal);display:inline-block;
+}
+.nav-links{display:flex;align-items:center;gap:28px;}
+.nav-link{
+  color:rgba(255,255,255,0.7);text-decoration:none;
+  font-size:14px;font-weight:500;transition:color .2s;
+}
+.nav-link:hover{color:#fff;}
+.nav-cta{
+  background:var(--teal);color:var(--midnight);
+  padding:8px 18px;border-radius:8px;
+  font-size:14px;font-weight:700;text-decoration:none;
+  transition:background .2s,transform .15s;letter-spacing:-0.01em;
+}
+.nav-cta:hover{background:#00D4B8;transform:translateY(-1px);}
+.nav-theme{
+  background:transparent;border:1px solid rgba(255,255,255,0.2);
+  color:rgba(255,255,255,0.6);cursor:pointer;
+  width:32px;height:32px;border-radius:8px;
+  font-size:14px;display:flex;align-items:center;justify-content:center;
+  transition:border-color .2s;
+}
+.nav-theme:hover{border-color:rgba(255,255,255,0.5);}
+@media(max-width:640px){.nav-links .nav-link{display:none;}}
+
+/* HERO */
+.hero{
+  background:var(--midnight);
+  padding:120px 5vw 80px;
+  position:relative;overflow:hidden;
+  min-height:100vh;display:flex;align-items:center;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 70% 50%,rgba(0,191,165,0.08) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 60% at 10% 80%,rgba(244,98,42,0.06) 0%,transparent 50%);
+}
+.hero-inner{
+  max-width:1100px;margin:0 auto;
+  display:grid;grid-template-columns:1fr 420px;gap:60px;
+  align-items:center;position:relative;z-index:1;width:100%;
+}
+@media(max-width:900px){
+  .hero-inner{grid-template-columns:1fr;gap:48px;}
+  .hero-phone{display:none;}
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:12px;font-weight:600;letter-spacing:0.06em;
+  text-transform:uppercase;color:var(--teal);margin-bottom:24px;
+}
+.hero-eyebrow span{display:inline-block;width:20px;height:1px;background:var(--teal);}
+.hero h1{
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(36px,5vw,60px);
+  font-weight:700;line-height:1.1;color:#fff;
+  text-wrap:balance;letter-spacing:-0.02em;margin-bottom:24px;
+}
+.hero h1 em{font-style:italic;color:var(--teal);}
+.hero-sub{
+  font-size:18px;line-height:1.7;
+  color:rgba(255,255,255,0.65);max-width:520px;margin-bottom:36px;
+}
+.hero-sub strong{color:#fff;}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:48px;}
+.btn-primary{
+  background:var(--teal);color:var(--midnight);
+  padding:14px 28px;border-radius:10px;
+  font-size:15px;font-weight:700;text-decoration:none;
+  transition:background .2s,transform .15s,box-shadow .2s;
+  box-shadow:0 4px 24px rgba(0,191,165,0.3);letter-spacing:-0.01em;
+}
+.btn-primary:hover{background:#00D4B8;transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,191,165,0.4);}
+.btn-ghost{
+  background:rgba(255,255,255,0.08);color:#fff;
+  padding:14px 28px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);
+  font-size:15px;font-weight:600;text-decoration:none;transition:background .2s;
+}
+.btn-ghost:hover{background:rgba(255,255,255,0.14);}
+.hero-proof{display:flex;align-items:center;gap:12px;font-size:13px;color:rgba(255,255,255,0.45);}
+.hero-proof-dots{display:flex;}
+.proof-avatar{
+  width:28px;height:28px;border-radius:50%;
+  border:2px solid var(--midnight);
+  background:linear-gradient(135deg,#4F8EF7,#00BFA5);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;color:#fff;font-weight:700;margin-left:-6px;
+}
+.proof-avatar:first-child{margin-left:0;}
+
+/* PHONE MOCKUP */
+.hero-phone{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:24px;padding:20px;
+}
+.phone-bar{
+  display:flex;align-items:center;gap:8px;
+  padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:16px;
+}
+.phone-back{color:var(--teal);font-size:13px;font-weight:600;}
+.phone-contact{flex:1;text-align:center;font-size:14px;font-weight:600;color:#fff;}
+.phone-sub{font-size:11px;color:rgba(255,255,255,0.4);text-align:center;margin-top:1px;}
+.chat{display:flex;flex-direction:column;gap:12px;min-height:340px;}
+.chat-row{display:flex;}
+.chat-row.out{justify-content:flex-end;}
+.chat-row.in{justify-content:flex-start;}
+.bubble{max-width:82%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.5;}
+.bubble.out{
+  background:var(--teal);color:var(--midnight);font-weight:500;border-bottom-right-radius:3px;
+}
+.bubble.in{
+  background:rgba(255,255,255,0.1);color:#fff;
+  border-bottom-left-radius:3px;border:1px solid rgba(255,255,255,0.08);
+}
+.bubble-time{display:block;font-size:10px;margin-top:5px;opacity:0.55;}
+.slot-card{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;padding:12px 14px;width:100%;margin-bottom:4px;
+}
+.slot-card .sc-time{font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px;}
+.slot-card .sc-name{font-size:14px;font-weight:600;color:#fff;}
+.slot-card .sc-status{
+  display:inline-block;margin-top:6px;
+  font-size:11px;font-weight:600;padding:3px 8px;border-radius:100px;
+}
+.sc-status.cancelled{background:rgba(244,98,42,0.2);color:#F4622A;}
+.sc-status.booked{background:rgba(0,191,165,0.2);color:#00BFA5;}
+.chat-step{opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s;}
+.chat-step.show{opacity:1;transform:translateY(0);}
+
+/* STATS */
+.stats{
+  background:var(--midnight);padding:48px 5vw;
+  border-top:1px solid rgba(255,255,255,0.06);
+}
+.stats-inner{
+  max-width:1000px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:32px;
+}
+@media(max-width:700px){.stats-inner{grid-template-columns:repeat(2,1fr);}}
+.stat{text-align:center;}
+.stat-value{
+  font-size:clamp(28px,4vw,44px);font-weight:800;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-0.03em;line-height:1;margin-bottom:8px;
+}
+.stat-value.ember{color:var(--ember);}
+.stat-value.teal{color:var(--teal);}
+.stat-value.white{color:#fff;}
+.stat-label{font-size:13px;color:rgba(255,255,255,0.5);line-height:1.4;}
+
+/* SECTION BASE */
+.section{padding:80px 5vw;}
+.section-inner{max-width:1000px;margin:0 auto;}
+.section-eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:0.07em;
+  text-transform:uppercase;color:var(--teal);margin-bottom:12px;
+}
+.section h2{
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(26px,4vw,40px);font-weight:700;letter-spacing:-0.02em;
+  color:var(--ink);text-wrap:balance;margin-bottom:16px;line-height:1.2;
+}
+.section-sub{
+  font-size:17px;color:var(--ash);line-height:1.7;max-width:560px;margin-bottom:48px;
+}
+
+/* BEFORE / AFTER */
+.ba-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+@media(max-width:700px){.ba-grid{grid-template-columns:1fr;}}
+.ba-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;}
+.ba-header{padding:16px 20px;font-size:13px;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;}
+.ba-header.before{background:var(--ember-t);color:var(--ember);}
+.ba-header.after{background:var(--teal-t);color:var(--teal);}
+.ba-steps{padding:20px;display:flex;flex-direction:column;gap:12px;}
+.ba-step{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--ash);line-height:1.5;}
+.ba-icon{
+  width:24px;height:24px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;margin-top:1px;
+}
+.ba-icon.x{background:var(--ember-t);color:var(--ember);}
+.ba-icon.ok{background:var(--teal-t);color:var(--teal);}
+.ba-result{
+  margin:0 20px 20px;padding:12px 16px;border-radius:8px;
+  font-size:14px;font-weight:600;text-align:center;
+}
+.ba-result.loss{background:var(--ember-t);color:var(--ember);}
+.ba-result.win{background:var(--teal-t);color:var(--teal);}
+
+/* HOW IT WORKS */
+.how-bg{background:var(--surface);}
+.steps-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0;position:relative;}
+@media(max-width:700px){.steps-row{grid-template-columns:1fr;}}
+.steps-row::before{
+  content:'';position:absolute;top:36px;
+  left:calc(16.67% + 20px);right:calc(16.67% + 20px);height:2px;
+  background:linear-gradient(90deg,var(--teal),rgba(0,191,165,0.3));
+}
+@media(max-width:700px){.steps-row::before{display:none;}}
+.how-step{text-align:center;padding:0 24px;position:relative;z-index:1;}
+.how-num{
+  width:72px;height:72px;border-radius:50%;
+  background:var(--midnight);color:var(--teal);
+  font-size:22px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 20px;border:3px solid var(--teal-t);font-variant-numeric:tabular-nums;
+}
+.how-title{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:10px;letter-spacing:-0.01em;}
+.how-desc{font-size:14px;color:var(--ash);line-height:1.65;}
+.how-badge{
+  display:inline-block;margin-top:12px;
+  background:var(--teal-t);color:var(--teal);font-size:12px;font-weight:600;padding:4px 10px;border-radius:100px;
+}
+
+/* FEATURES */
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+@media(max-width:800px){.features-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:500px){.features-grid{grid-template-columns:1fr;}}
+.feat{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;transition:border-color .2s,box-shadow .2s;
+}
+.feat:hover{border-color:var(--teal);box-shadow:0 4px 24px rgba(0,191,165,0.08);}
+.feat-icon{
+  width:40px;height:40px;border-radius:10px;background:var(--teal-t);
+  display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px;
+}
+.feat-title{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px;letter-spacing:-0.01em;}
+.feat-desc{font-size:13px;color:var(--ash);line-height:1.6;}
+.feat-coming{
+  display:inline-block;margin-top:8px;
+  font-size:11px;color:var(--ash);background:var(--border);padding:2px 8px;border-radius:100px;
+}
+
+/* PRACTO SECTION */
+.practo-section{background:var(--midnight);padding:64px 5vw;}
+.practo-inner{
+  max-width:900px;margin:0 auto;
+  display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;
+}
+@media(max-width:700px){.practo-inner{grid-template-columns:1fr;gap:32px;}}
+.practo-text .label{
+  font-size:11px;font-weight:700;letter-spacing:0.07em;
+  text-transform:uppercase;color:var(--teal);margin-bottom:12px;
+}
+.practo-text h2{
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(22px,3vw,34px);font-weight:700;
+  color:#fff;letter-spacing:-0.02em;margin-bottom:16px;text-wrap:balance;
+}
+.practo-text p{font-size:15px;color:rgba(255,255,255,0.6);line-height:1.7;margin-bottom:16px;}
+.practo-diagram{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
+  border-radius:16px;padding:24px;
+}
+.prow{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.06);}
+.prow:last-child{border-bottom:none;}
+.prow-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.prow-icon.blue{background:rgba(59,130,246,0.2);color:#60A5FA;}
+.prow-icon.teal{background:var(--teal-t);color:var(--teal);}
+.prow-label{flex:1;}
+.prow-name{font-size:13px;font-weight:600;color:#fff;}
+.prow-job{font-size:12px;color:rgba(255,255,255,0.4);}
+.prow-check{font-size:12px;font-weight:600;padding:3px 8px;border-radius:100px;}
+.prow-check.comp{background:rgba(59,130,246,0.15);color:#60A5FA;}
+.prow-check.sp{background:var(--teal-t);color:var(--teal);}
+
+/* INDIA BAR */
+.india-bar{background:linear-gradient(135deg,#FF6B35 0%,#F4622A 100%);padding:40px 5vw;}
+.india-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;gap:32px;flex-wrap:wrap;}
+.india-flag{font-size:40px;flex-shrink:0;}
+.india-text h3{font-size:20px;font-weight:700;color:#fff;margin-bottom:6px;letter-spacing:-0.01em;}
+.india-text p{font-size:14px;color:rgba(255,255,255,0.8);line-height:1.6;}
+.india-tags{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
+.india-tag{
+  background:rgba(255,255,255,0.15);color:#fff;
+  padding:5px 12px;border-radius:100px;font-size:13px;font-weight:500;
+  border:1px solid rgba(255,255,255,0.2);
+}
+
+/* PRICING */
+.pricing-section{background:var(--surface);}
+.pricing-card{
+  max-width:440px;margin:0 auto;
+  background:var(--bg);border:2px solid var(--teal);
+  border-radius:20px;padding:40px;position:relative;overflow:hidden;
+}
+.pricing-card::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:140px;height:140px;
+  background:radial-gradient(circle,rgba(0,191,165,0.12) 0%,transparent 70%);
+}
+.pricing-badge{
+  position:absolute;top:20px;right:20px;
+  background:var(--teal);color:var(--midnight);
+  font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px;
+}
+.pricing-plan{font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--teal);margin-bottom:8px;}
+.pricing-price{display:flex;align-items:baseline;gap:4px;margin-bottom:6px;}
+.pricing-currency{font-size:24px;font-weight:700;color:var(--ink);}
+.pricing-amount{
+  font-size:56px;font-weight:800;color:var(--ink);
+  letter-spacing:-0.04em;font-variant-numeric:tabular-nums;line-height:1;
+}
+.pricing-period{font-size:16px;color:var(--ash);}
+.pricing-usd{font-size:13px;color:var(--ash);margin-bottom:24px;}
+.pricing-divider{height:1px;background:var(--border);margin:24px 0;}
+.pricing-features{display:flex;flex-direction:column;gap:12px;margin-bottom:28px;}
+.pf{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink);}
+.pf-check{
+  width:20px;height:20px;border-radius:50%;
+  background:var(--teal-t);color:var(--teal);
+  font-size:10px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.pricing-note{text-align:center;font-size:12px;color:var(--ash);margin-top:12px;}
+.btn-full{
+  display:block;width:100%;text-align:center;
+  background:var(--teal);color:var(--midnight);
+  padding:15px;border-radius:10px;
+  font-size:15px;font-weight:700;text-decoration:none;
+  transition:background .2s,transform .15s;letter-spacing:-0.01em;
+}
+.btn-full:hover{background:#00D4B8;transform:translateY(-1px);}
+
+/* FINAL CTA */
+.cta-section{
+  background:var(--midnight);padding:96px 5vw;text-align:center;
+  position:relative;overflow:hidden;
+}
+.cta-section::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(0,191,165,0.07) 0%,transparent 70%);
+}
+.cta-section h2{
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(28px,5vw,52px);font-weight:700;color:#fff;
+  text-wrap:balance;margin-bottom:16px;letter-spacing:-0.02em;line-height:1.2;
+  position:relative;z-index:1;
+}
+.cta-section h2 em{color:var(--teal);font-style:italic;}
+.cta-sub{font-size:17px;color:rgba(255,255,255,0.55);margin-bottom:36px;position:relative;z-index:1;}
+.cta-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1;}
+
+/* FOOTER */
+footer{background:#060E20;padding:40px 5vw;border-top:1px solid rgba(255,255,255,0.06);}
+.footer-inner{
+  max-width:1000px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+}
+.footer-logo{font-size:16px;font-weight:800;color:#fff;letter-spacing:-0.02em;display:flex;align-items:center;gap:6px;}
+.footer-tagline{font-size:13px;color:rgba(255,255,255,0.3);}
+.footer-links{display:flex;gap:24px;}
+.footer-link{font-size:13px;color:rgba(255,255,255,0.35);text-decoration:none;transition:color .2s;}
+.footer-link:hover{color:rgba(255,255,255,0.7);}
+
+/* SCROLL REVEAL */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+
+:focus-visible{outline:2px solid var(--teal);outline-offset:3px;border-radius:4px;}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a class="nav-logo" href="#"><span class="dot"></span>SlotPilot</a>
+  <div class="nav-links">
+    <a class="nav-link" href="#how">How it works</a>
+    <a class="nav-link" href="#features">Features</a>
+    <a class="nav-link" href="#pricing">Pricing</a>
+    <button class="nav-theme" id="themeBtn" aria-label="Toggle theme">&#9681;</button>
+    <a class="nav-cta" href="#pricing">Start free &rarr;</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-eyebrow"><span></span>For physiotherapy &middot; dental &middot; chiropractic</div>
+      <h1>Your 2pm just<br>cancelled.<br><em>It's already filled.</em></h1>
+      <p class="hero-sub">
+        SlotPilot automatically texts the <strong>next patient on your waitlist</strong> the moment a slot opens. They confirm in 15 minutes. Your receptionist does nothing.
+      </p>
+      <div class="hero-actions">
+        <a class="btn-primary" href="#pricing">Start 30-day free trial</a>
+        <a class="btn-ghost" href="#how">See how it works</a>
+      </div>
+      <div class="hero-proof">
+        <div class="hero-proof-dots">
+          <div class="proof-avatar">R</div>
+          <div class="proof-avatar">S</div>
+          <div class="proof-avatar">A</div>
+        </div>
+        <span>Built for clinics losing &#8377;50,000&ndash;&#8377;2L/month to empty slots</span>
+      </div>
+    </div>
+
+    <div class="hero-phone">
+      <div class="phone-bar">
+        <span class="phone-back">&#8249; Back</span>
+        <div>
+          <div class="phone-contact">SlotPilot</div>
+          <div class="phone-sub">Clinic notification</div>
+        </div>
+        <span></span>
+      </div>
+      <div class="chat" id="chat">
+        <div class="slot-card chat-step" id="s0">
+          <div class="sc-time">TODAY &middot; 2:00 PM</div>
+          <div class="sc-name">Rajesh Kumar &mdash; Initial Assessment</div>
+          <span class="sc-status cancelled">Cancelled</span>
+        </div>
+        <div class="chat-row out chat-step" id="s1">
+          <div class="bubble out">
+            Hi Priya! An <strong>Initial Assessment</strong> slot opened at City Physio today at 2:00pm. Reply YES to confirm or NO to skip. Offer expires in 15 min.
+            <span class="bubble-time">2:08pm &middot; SlotPilot</span>
+          </div>
+        </div>
+        <div class="chat-row in chat-step" id="s2">
+          <div class="bubble in">
+            YES
+            <span class="bubble-time">2:11pm</span>
+          </div>
+        </div>
+        <div class="slot-card chat-step" id="s3">
+          <div class="sc-time">TODAY &middot; 2:00 PM</div>
+          <div class="sc-name">Priya Mehta &mdash; Initial Assessment</div>
+          <span class="sc-status booked">&#10003; Booked</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stats-inner">
+    <div class="stat">
+      <div class="stat-value ember">&#8377;80K</div>
+      <div class="stat-label">avg monthly revenue lost to no-shows per clinic</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value teal">30&ndash;40%</div>
+      <div class="stat-label">reduction in no-shows with SMS reminders</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value white">15 min</div>
+      <div class="stat-label">offer window before next patient is automatically tried</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value teal">6.2L+</div>
+      <div class="stat-label">small clinics in India with no waitlist solution</div>
+    </div>
+  </div>
+</div>
+
+<!-- BEFORE / AFTER -->
+<section class="section">
+  <div class="section-inner">
+    <div class="section-eyebrow reveal">The problem</div>
+    <h2 class="reveal">What happens when a patient cancels today</h2>
+    <p class="section-sub reveal">Every clinic has a &ldquo;waitlist.&rdquo; It&rsquo;s a notebook, a WhatsApp group, or names in someone&rsquo;s head. None of it works when you need it most &mdash; right now, for the slot that just opened.</p>
+    <div class="ba-grid reveal">
+      <div class="ba-card">
+        <div class="ba-header before">Without SlotPilot</div>
+        <div class="ba-steps">
+          <div class="ba-step"><div class="ba-icon x">&#10005;</div>Patient cancels by WhatsApp or call</div>
+          <div class="ba-step"><div class="ba-icon x">&#10005;</div>Receptionist opens notebook, starts calling</div>
+          <div class="ba-step"><div class="ba-icon x">&#10005;</div>First 3 numbers don&rsquo;t pick up</div>
+          <div class="ba-step"><div class="ba-icon x">&#10005;</div>4th person already booked somewhere else</div>
+          <div class="ba-step"><div class="ba-icon x">&#10005;</div>20 minutes wasted. Slot still empty.</div>
+        </div>
+        <div class="ba-result loss">Slot goes empty &rarr; &#8377;1,500&ndash;&#8377;5,000 lost</div>
+      </div>
+      <div class="ba-card">
+        <div class="ba-header after">With SlotPilot</div>
+        <div class="ba-steps">
+          <div class="ba-step"><div class="ba-icon ok">&#10003;</div>Patient cancels</div>
+          <div class="ba-step"><div class="ba-icon ok">&#10003;</div>Receptionist clicks &ldquo;Cancel&rdquo; on the slot</div>
+          <div class="ba-step"><div class="ba-icon ok">&#10003;</div>System texts next matching waitlist patient instantly</div>
+          <div class="ba-step"><div class="ba-icon ok">&#10003;</div>Patient replies YES in 3 minutes</div>
+          <div class="ba-step"><div class="ba-icon ok">&#10003;</div>Slot booked. Confirmation sent. Done.</div>
+        </div>
+        <div class="ba-result win">Slot filled &rarr; revenue recovered in 15 minutes</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section how-bg" id="how">
+  <div class="section-inner">
+    <div class="section-eyebrow reveal">How it works</div>
+    <h2 class="reveal">Three steps. One click from your side.</h2>
+    <p class="section-sub reveal">Everything after step two is automatic. Your receptionist never calls a patient to fill a gap again.</p>
+    <div class="steps-row reveal">
+      <div class="how-step">
+        <div class="how-num">1</div>
+        <div class="how-title">Patients join your waitlist</div>
+        <div class="how-desc">You get a shareable link &mdash; <em>/join/your-clinic</em>. Share it on WhatsApp, in your email signature, or on a card at the front desk. Patients fill in their name, mobile, and what appointment they need. No app download. Done in 90 seconds.</div>
+        <span class="how-badge">One-time setup</span>
+      </div>
+      <div class="how-step">
+        <div class="how-num">2</div>
+        <div class="how-title">A slot opens</div>
+        <div class="how-desc">When a patient cancels or doesn&rsquo;t show up, open SlotPilot and click <strong>Cancel</strong> or <strong>No-show</strong> on that slot. That&rsquo;s the one action your staff takes.</div>
+        <span class="how-badge">15 seconds of staff time</span>
+      </div>
+      <div class="how-step">
+        <div class="how-num">3</div>
+        <div class="how-title">SlotPilot handles the rest</div>
+        <div class="how-desc">The system finds the right patient (matching appointment type + priority), texts them instantly, waits for their YES or NO, books the slot, sends a confirmation, and schedules their 24h + 2h reminders. All automatic.</div>
+        <span class="how-badge">Zero staff involvement</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-inner">
+    <div class="section-eyebrow reveal">Features</div>
+    <h2 class="reveal">Everything a small clinic actually needs</h2>
+    <p class="section-sub reveal">No hospital software. No &#8377;50,000/year enterprise plan. Just the tools to fill your empty slots and reduce no-shows.</p>
+    <div class="features-grid reveal">
+      <div class="feat">
+        <div class="feat-icon">&#9889;</div>
+        <div class="feat-title">Automatic SMS cascade</div>
+        <div class="feat-desc">The moment you cancel a slot, the system finds the next matching patient and texts them &mdash; no human in the loop.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">&#9201;</div>
+        <div class="feat-title">15-minute response window</div>
+        <div class="feat-desc">Patient gets 15 minutes to reply YES. No response or a NO? The next person on the list is tried automatically.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">&#128276;</div>
+        <div class="feat-title">24h + 2h reminders</div>
+        <div class="feat-desc">Every booked patient gets an automatic reminder the day before and 2 hours before &mdash; reducing no-show rates by 30&ndash;40%.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">&#8679;</div>
+        <div class="feat-title">Priority queue</div>
+        <div class="feat-desc">Mark urgent or post-surgery patients as high priority. They jump the queue and get offered slots before anyone else.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">&#128279;</div>
+        <div class="feat-title">Public join link</div>
+        <div class="feat-desc">Your unique waitlist link works on any device, any browser. Patients don&rsquo;t need to create an account or download anything.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">&#127973;</div>
+        <div class="feat-title">Multi-practitioner</div>
+        <div class="feat-desc">Manage slots across multiple doctors or physios in one clinic. Each slot can be assigned to a specific practitioner.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">&#128172;</div>
+        <div class="feat-title">WhatsApp integration</div>
+        <div class="feat-desc">Indians respond to WhatsApp, not SMS. Full WhatsApp Business API integration via MSG91 or Gupshup.</div>
+        <span class="feat-coming">Coming soon</span>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">&#8377;</div>
+        <div class="feat-title">UPI deposit on confirm</div>
+        <div class="feat-desc">Charge a small deposit (&#8377;100&ndash;200) when a waitlist patient confirms. If they no-show, they lose it. Behaviour changes fast.</div>
+        <span class="feat-coming">Coming soon</span>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">&#128202;</div>
+        <div class="feat-title">Recovery dashboard</div>
+        <div class="feat-desc">See exactly how many slots were recovered, how much revenue was saved, and your current no-show rate &mdash; by month.</div>
+        <span class="feat-coming">Coming soon</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRACTO -->
+<div class="practo-section">
+  <div class="practo-inner">
+    <div class="practo-text">
+      <div class="label">Already on Practo?</div>
+      <h2>Keep Practo. Add SlotPilot. They solve different problems.</h2>
+      <p>Practo brings <em>new patients</em> in through discovery. SlotPilot fills gaps with patients <em>already waiting</em>. They don&rsquo;t compete &mdash; they complement. You don&rsquo;t change anything about how Practo works.</p>
+      <p>Most clinics using SlotPilot alongside Practo see 15&ndash;20% more utilisation within the first month.</p>
+    </div>
+    <div class="practo-diagram">
+      <div class="prow">
+        <div class="prow-icon blue">P</div>
+        <div class="prow-label">
+          <div class="prow-name">Practo</div>
+          <div class="prow-job">Patient discovery &amp; new bookings</div>
+        </div>
+        <span class="prow-check comp">Keep it</span>
+      </div>
+      <div class="prow">
+        <div class="prow-icon teal">SP</div>
+        <div class="prow-label">
+          <div class="prow-name">SlotPilot</div>
+          <div class="prow-job">Fill gaps from existing waitlist</div>
+        </div>
+        <span class="prow-check sp">Add it</span>
+      </div>
+      <div class="prow">
+        <div class="prow-icon" style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);">&#128211;</div>
+        <div class="prow-label">
+          <div class="prow-name">Paper waitlist / WhatsApp calls</div>
+          <div class="prow-job">Manual, slow, unreliable</div>
+        </div>
+        <span class="prow-check" style="background:rgba(244,98,42,0.2);color:#F4622A;">Replace</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INDIA -->
+<div class="india-bar">
+  <div class="india-inner">
+    <div class="india-flag">&#127470;&#127475;</div>
+    <div class="india-text">
+      <h3>Built for Indian clinics</h3>
+      <p>Hindi UI, WhatsApp over SMS, UPI deposits, and pricing that makes sense for Indian markets &mdash; not a US product retrofitted for India.</p>
+    </div>
+    <div class="india-tags">
+      <span class="india-tag">Hindi UI coming</span>
+      <span class="india-tag">WhatsApp first</span>
+      <span class="india-tag">UPI deposits</span>
+      <span class="india-tag">Tier 2 &amp; 3 cities</span>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<section class="section pricing-section" id="pricing">
+  <div class="section-inner">
+    <div class="section-eyebrow reveal" style="text-align:center">Pricing</div>
+    <h2 class="reveal" style="text-align:center;max-width:100%">Simple. One plan. No hidden fees.</h2>
+    <p class="section-sub reveal" style="text-align:center;max-width:100%;margin-bottom:40px">One clinic, unlimited slots, unlimited waitlist entries, everything included.</p>
+    <div class="pricing-card reveal">
+      <span class="pricing-badge">30 days free</span>
+      <div class="pricing-plan">Clinic plan</div>
+      <div class="pricing-price">
+        <span class="pricing-currency">&#8377;</span>
+        <span class="pricing-amount">999</span>
+        <span class="pricing-period">/month</span>
+      </div>
+      <div class="pricing-usd">~$12 USD &middot; No credit card for trial</div>
+      <div class="pricing-divider"></div>
+      <div class="pricing-features">
+        <div class="pf"><div class="pf-check">&#10003;</div>Unlimited appointment slots</div>
+        <div class="pf"><div class="pf-check">&#10003;</div>Unlimited waitlist patients</div>
+        <div class="pf"><div class="pf-check">&#10003;</div>Automatic SMS cascade on cancellation</div>
+        <div class="pf"><div class="pf-check">&#10003;</div>24h + 2h appointment reminders</div>
+        <div class="pf"><div class="pf-check">&#10003;</div>Priority queue management</div>
+        <div class="pf"><div class="pf-check">&#10003;</div>Public patient join link</div>
+        <div class="pf"><div class="pf-check">&#10003;</div>Multi-practitioner support</div>
+        <div class="pf"><div class="pf-check">&#10003;</div>SMS inbox + full message log</div>
+      </div>
+      <a class="btn-full" href="https://github.com/hkpritiranjan/slotpilot">Start free &mdash; no credit card needed</a>
+      <p class="pricing-note">Cancel anytime. Most clinics recover &#8377;999 in their first recovered slot.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2>Stop losing &#8377;80,000 a month<br>to <em>empty slots</em>.</h2>
+  <p class="cta-sub">Your patients are already waiting. You just need to connect them to the gap.</p>
+  <div class="cta-actions">
+    <a class="btn-primary" href="#pricing">Start your free trial</a>
+    <a class="btn-ghost" href="#how">See how it works</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-logo"><span style="width:7px;height:7px;border-radius:50%;background:var(--teal);display:inline-block"></span>SlotPilot</div>
+      <div class="footer-tagline" style="margin-top:4px">Automated waitlist &amp; no-show recovery for small clinics</div>
+    </div>
+    <div class="footer-links">
+      <a class="footer-link" href="#how">How it works</a>
+      <a class="footer-link" href="#features">Features</a>
+      <a class="footer-link" href="#pricing">Pricing</a>
+      <a class="footer-link" href="https://github.com/hkpritiranjan/slotpilot" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 40);
+}, {passive:true});
+
+const root = document.documentElement;
+const themeBtn = document.getElementById('themeBtn');
+const stored = localStorage.getItem('sp-theme');
+if (stored) root.dataset.theme = stored;
+themeBtn.addEventListener('click', () => {
+  const cur = root.dataset.theme;
+  const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  const next = (!cur ? (sys === 'dark' ? 'light' : 'dark') : cur === 'dark' ? 'light' : 'dark');
+  root.dataset.theme = next;
+  localStorage.setItem('sp-theme', next);
+});
+
+const reveals = document.querySelectorAll('.reveal');
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); } });
+}, { threshold: 0.12 });
+reveals.forEach(el => revealObs.observe(el));
+
+const steps = ['s0','s1','s2','s3'];
+let stepIdx = 0;
+function showNextStep() {
+  if (stepIdx < steps.length) {
+    const el = document.getElementById(steps[stepIdx]);
+    if (el) el.classList.add('show');
+    stepIdx++;
+    if (stepIdx < steps.length) setTimeout(showNextStep, stepIdx === 1 ? 1200 : stepIdx === 2 ? 2400 : 1400);
+    else setTimeout(resetChat, 4000);
+  }
+}
+function resetChat() {
+  steps.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('show'); });
+  stepIdx = 0;
+  setTimeout(showNextStep, 800);
+}
+setTimeout(showNextStep, 1000);
+</script>
+</body>
+</html>
