@@ -42,12 +42,16 @@ async function sendViaTwilio(opts: MessageOpts): Promise<void> {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({ To: to, From: from, Body: opts.body }),
+    signal: AbortSignal.timeout(30000),
   });
 
   if (!res.ok) {
     const err = await res.text();
     throw new Error(`Twilio error ${res.status}: ${err}`);
   }
+
+  const result = await res.json() as { sid?: string };
+  console.log(`[Twilio] Sent ${isWhatsApp ? "WhatsApp" : "SMS"} to ${to} — SID: ${result.sid}`);
 }
 
 async function sendViaMeta(opts: MessageOpts): Promise<void> {
