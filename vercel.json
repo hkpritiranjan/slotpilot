@@ -1,12 +1,5 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/cascade",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/reminders",
-      "schedule": "*/15 * * * *"
-    }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/$1" }
   ]
 }
