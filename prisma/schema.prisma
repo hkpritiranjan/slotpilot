@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Clinic {
+  id               String          @id @default(cuid())
+  name             String
+  email            String          @unique
+  password         String
+  phone            String?
+  slug             String          @unique
+  address          String?
+  appointmentTypes String          @default("General Consultation,Follow-up,Assessment,Treatment Session")
+  slotDuration     Int             @default(30)
+  createdAt        DateTime        @default(now())
+
+  slots            Slot[]
+  waitlist         WaitlistEntry[]
+  smsMessages      SmsMessage[]
+}
+
+model Slot {
+  id              String         @id @default(cuid())
+  clinicId        String
+  clinic          Clinic         @relation(fields: [clinicId], references: [id])
+  date            String
+  startTime       String
+  endTime         String
+  appointmentType String
+  practitioner    String?
+  status          String         @default("available")
+  patientName     String?
+  patientPhone    String?
+  notes           String?
+  createdAt       DateTime       @default(now())
+
+  notifications   Notification[]
+  reminders       Reminder[]
+}
+
+model WaitlistEntry {
+  id              String         @id @default(cuid())
+  clinicId        String
+  clinic          Clinic         @relation(fields: [clinicId], references: [id])
+  patientName     String
+  patientPhone    String
+  appointmentType String
+  preferredDays   String?
+  preferredTime   String         @default("any")
+  priority        Int            @default(0)
+  status          String         @default("waiting")
+  createdAt       DateTime       @default(now())
+
+  notifications   Notification[]
+}
+
+model Notification {
+  id            String        @id @default(cuid())
+  waitlistId    String
+  waitlistEntry WaitlistEntry @relation(fields: [waitlistId], references: [id])
+  slotId        String
+  slot          Slot          @relation(fields: [slotId], references: [id])
+  sentAt        DateTime      @default(now())
+  response      String        @default("pending")
+  respondedAt   DateTime?
+  expiresAt     DateTime
+
+  @@index([slotId])
+  @@index([waitlistId])
+}
+
+model SmsMessage {
+  id        String   @id @default(cuid())
+  clinicId  String
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
+  to        String
+  from      String
+  body      String
+  direction String
+  tag       String?
+  createdAt DateTime @default(now())
+}
+
+model Reminder {
+  id      String    @id @default(cuid())
+  slotId  String
+  slot    Slot      @relation(fields: [slotId], references: [id])
+  type    String
+  status  String    @default("pending")
+  sentAt  DateTime?
+}
