@@ -7,6 +7,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: "file:./prisma/slotpilot.db",
+    url: process.env.LIBSQL_URL ?? "file:./prisma/slotpilot.db",
   },
 });
