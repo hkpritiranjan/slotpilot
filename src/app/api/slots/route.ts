@@ -9,8 +9,15 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const date = searchParams.get("date");
 
+  const startDate = searchParams.get("startDate");
+  const endDate = searchParams.get("endDate");
+
   const where: Record<string, unknown> = { clinicId: session.clinicId };
-  if (date) where.date = date;
+  if (startDate && endDate) {
+    where.date = { gte: startDate, lte: endDate };
+  } else if (date) {
+    where.date = date;
+  }
 
   const slots = await db.slot.findMany({
     where,
