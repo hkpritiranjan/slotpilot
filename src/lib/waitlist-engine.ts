@@ -3,6 +3,30 @@ import { sendMessage } from "./sms";
 
 const OFFER_WINDOW_MINUTES = 15;
 
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function slotDayName(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return DAY_NAMES[new Date(y, m - 1, d).getDay()];
+}
+
+function matchesTimePreference(startTime: string, pref: string): boolean {
+  if (!pref || pref === "any") return true;
+  const [h] = startTime.split(":").map(Number);
+  const mins = h * 60 + Number(startTime.split(":")[1]);
+  if (pref === "morning") return mins < 720;        // before 12:00
+  if (pref === "afternoon") return mins >= 720 && mins < 1020; // 12:00–17:00
+  if (pref === "evening") return mins >= 1020;      // 17:00+
+  return true;
+}
+
+function matchesDayPreference(dateStr: string, preferredDays: string | null): boolean {
+  if (!preferredDays) return true;
+  const days = preferredDays.split(",").map((d) => d.trim());
+  if (days.length === 0) return true;
+  return days.includes(slotDayName(dateStr));
+}
+
 function formatDateTime(date: string, time: string): string {
   const [y, m, d] = date.split("-");
   const [h, min] = time.split(":");
@@ -30,8 +54,10 @@ export async function triggerWaitlistForSlot(slotId: string): Promise<{ notified
     data: { response: "expired" },
   });
 
-  // Find the next waiting patient for this clinic + appointment type
-  const candidate = await db.waitlistEntry.findFirst({
+  // Find next waiting patient — ordered by priority then join time,
+  // then filtered in JS for time/day preference so we skip non-matching
+  // patients rather than stopping at the first mismatch.
+  const allCandidates = await db.waitlistEntry.findMany({
     where: {
       clinicId: slot.clinicId,
       appointmentType: slot.appointmentType,
@@ -39,6 +65,12 @@ export async function triggerWaitlistForSlot(slotId: string): Promise<{ notified
     },
     orderBy: [{ priority: "desc" }, { createdAt: "asc" }],
   });
+
+  const candidate = allCandidates.find(
+    (c) =>
+      matchesTimePreference(slot.startTime, c.preferredTime) &&
+      matchesDayPreference(slot.date, c.preferredDays)
+  ) ?? null;
 
   if (!candidate) return { notified: false };
 

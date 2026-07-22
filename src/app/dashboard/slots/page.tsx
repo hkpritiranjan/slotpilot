@@ -46,13 +46,70 @@ function formatDate(str: string) {
   });
 }
 
+const DAYS_OF_WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+function nextMonday(): string {
+  const d = new Date();
+  const diff = (8 - d.getDay()) % 7 || 7;
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().slice(0, 10);
+}
+
 export default function SlotsPage() {
   const [date, setDate] = useState(toDateStr(new Date()));
   const [slots, setSlots] = useState<Slot[]>([]);
   const [apptTypes, setApptTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const [showGenerate, setShowGenerate] = useState(false);
   const [actionMsg, setActionMsg] = useState("");
+
+  const [gen, setGen] = useState({
+    days: ["Mon", "Tue", "Wed", "Thu", "Fri"] as string[],
+    startTime: "09:00",
+    endTime: "13:00",
+    durationMins: 30,
+    appointmentType: "",
+    practitioner: "",
+    startDate: nextMonday(),
+    weeksAhead: 2,
+  });
+  const [generating, setGenerating] = useState(false);
+
+  function toggleGenDay(day: string) {
+    setGen(g => ({
+      ...g,
+      days: g.days.includes(day) ? g.days.filter(d => d !== day) : [...g.days, day],
+    }));
+  }
+
+  function previewCount(): number {
+    const [sh, sm] = gen.startTime.split(":").map(Number);
+    const [eh, em] = gen.endTime.split(":").map(Number);
+    const perDay = Math.floor(((eh * 60 + em) - (sh * 60 + sm)) / gen.durationMins);
+    return Math.max(0, perDay) * gen.days.length * gen.weeksAhead;
+  }
+
+  async function generateSlots(e: React.FormEvent) {
+    e.preventDefault();
+    if (!gen.days.length) return;
+    setGenerating(true);
+    const res = await fetch("/api/slots/bulk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(gen),
+    });
+    const data = await res.json();
+    setGenerating(false);
+    setShowGenerate(false);
+    if (res.ok) {
+      setActionMsg(`✓ Created ${data.created} slots`);
+      await loadSlots();
+    } else {
+      setActionMsg(data.error ?? "Failed to generate slots");
+    }
+    setTimeout(() => setActionMsg(""), 5000);
+  }
 
   const [form, setForm] = useState({
     date: toDateStr(new Date()),
@@ -79,6 +136,7 @@ export default function SlotsPage() {
         const parsed = parseApptTypes(d.appointmentTypes).map(t => t.name);
         setApptTypes(parsed);
         setForm(f => ({ ...f, appointmentType: parsed[0] ?? "" }));
+        setGen(g => ({ ...g, appointmentType: parsed[0] ?? "" }));
       }
     });
   }, []);
@@ -146,12 +204,20 @@ export default function SlotsPage() {
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-slate-900">Slots</h1>
-        <button
-          onClick={() => { setForm(f => ({ ...f, date })); setShowAdd(true); }}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
-        >
-          + Add slot
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => { setShowGenerate(true); setShowAdd(false); }}
+            className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+          >
+            ⟳ Generate slots
+          </button>
+          <button
+            onClick={() => { setForm(f => ({ ...f, date })); setShowAdd(true); setShowGenerate(false); }}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+          >
+            + Add slot
+          </button>
+        </div>
       </div>
 
       {actionMsg && (
@@ -339,6 +405,118 @@ export default function SlotsPage() {
                 <button type="submit"
                   className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
                   Add slot
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Generate slots modal */}
+      {showGenerate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-xl">
+            <h2 className="text-lg font-bold text-slate-900 mb-1">Generate recurring slots</h2>
+            <p className="text-sm text-slate-500 mb-5">Fill your schedule without creating slots one by one.</p>
+            <form onSubmit={generateSlots} className="space-y-4">
+
+              {/* Days of week */}
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-2">Days of the week</label>
+                <div className="flex gap-2 flex-wrap">
+                  {DAYS_OF_WEEK.map(day => (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => toggleGenDay(day)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                        gen.days.includes(day)
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Time range + duration */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Start time</label>
+                  <input type="time" value={gen.startTime}
+                    onChange={e => setGen(g => ({ ...g, startTime: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">End time</label>
+                  <input type="time" value={gen.endTime}
+                    onChange={e => setGen(g => ({ ...g, endTime: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Duration (min)</label>
+                  <select value={gen.durationMins}
+                    onChange={e => setGen(g => ({ ...g, durationMins: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    {[15, 20, 30, 45, 60, 90].map(m => <option key={m} value={m}>{m} min</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {/* Type + practitioner */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Appointment type</label>
+                  <select value={gen.appointmentType}
+                    onChange={e => setGen(g => ({ ...g, appointmentType: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    {apptTypes.map(t => <option key={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Practitioner (optional)</label>
+                  <input type="text" value={gen.practitioner}
+                    onChange={e => setGen(g => ({ ...g, practitioner: e.target.value }))}
+                    placeholder="Dr. Smith"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+              </div>
+
+              {/* Start date + weeks */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Starting from</label>
+                  <input type="date" value={gen.startDate}
+                    onChange={e => setGen(g => ({ ...g, startDate: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">For how many weeks</label>
+                  <select value={gen.weeksAhead}
+                    onChange={e => setGen(g => ({ ...g, weeksAhead: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    {[1, 2, 4, 8, 12].map(w => <option key={w} value={w}>{w} week{w > 1 ? "s" : ""}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {/* Preview */}
+              {gen.days.length > 0 && previewCount() > 0 && (
+                <div className="p-3 bg-indigo-50 rounded-lg text-sm text-indigo-800">
+                  This will create <strong>{previewCount()} slots</strong> — {gen.days.length} day{gen.days.length > 1 ? "s" : ""} × {Math.floor(((gen.endTime.split(":").map(Number).reduce((a,b,i)=>a+(i===0?b*60:b),0))-(gen.startTime.split(":").map(Number).reduce((a,b,i)=>a+(i===0?b*60:b),0)))/gen.durationMins)} per day × {gen.weeksAhead} weeks
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-1">
+                <button type="button" onClick={() => setShowGenerate(false)}
+                  className="flex-1 py-2.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50">
+                  Cancel
+                </button>
+                <button type="submit" disabled={generating || gen.days.length === 0 || previewCount() === 0}
+                  className="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
+                  {generating ? "Generating..." : `Generate ${previewCount()} slots`}
                 </button>
               </div>
             </form>
