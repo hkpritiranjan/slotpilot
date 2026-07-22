@@ -10,6 +10,7 @@ const NAV = [
   { href: "/dashboard/waitlist", label: "Waitlist", icon: "≡" },
   { href: "/dashboard/sms", label: "SMS Inbox", icon: "✉" },
   { href: "/dashboard/appointment-types", label: "Appt Types", icon: "◈" },
+  { href: "/dashboard/settings", label: "Settings", icon: "⚙" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -67,13 +68,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="p-4 border-t border-slate-100 space-y-2">
           {slug && (
             <div className="px-3 py-2 bg-slate-50 rounded-lg">
-              <p className="text-xs text-slate-500 mb-1">Patient waitlist link</p>
+              <p className="text-xs text-slate-500 mb-1">Booking page</p>
               <a
-                href={`/join/${slug}`}
+                href={`/book/${slug}`}
                 target="_blank"
                 className="text-xs text-indigo-600 hover:underline break-all"
               >
-                /join/{slug}
+                /book/{slug}
               </a>
             </div>
           )}

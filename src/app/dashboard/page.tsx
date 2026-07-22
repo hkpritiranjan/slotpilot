@@ -51,6 +51,7 @@ export default function DashboardPage() {
   const [clinicName, setClinicName] = useState("");
   const [clinicSlug, setClinicSlug] = useState("");
   const [copied, setCopied] = useState(false);
+  const [onboarding, setOnboarding] = useState<{ profileComplete: boolean; slotsCreated: boolean; hasPatient: boolean } | null>(null);
 
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
@@ -60,6 +61,7 @@ export default function DashboardPage() {
       setClinicSlug(d?.slug ?? "");
     });
     fetch("/api/stats").then((r) => r.json()).then((d) => setRecovery(d));
+    fetch("/api/onboarding").then((r) => r.json()).then((d) => setOnboarding(d));
 
     Promise.all([
       fetch(`/api/slots?date=${today}`).then((r) => r.json()),
@@ -94,6 +96,62 @@ export default function DashboardPage() {
           {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </p>
       </div>
+
+      {/* Onboarding checklist — shown until all steps complete */}
+      {onboarding && !(onboarding.profileComplete && onboarding.slotsCreated && onboarding.hasPatient) && (
+        <div className="bg-white border border-amber-200 rounded-xl overflow-hidden mb-6">
+          <div className="px-5 py-3.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
+            <span className="text-amber-500">◎</span>
+            <span className="text-sm font-semibold text-amber-900">Get started — 3 steps to your first booking</span>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {[
+              {
+                done: onboarding.profileComplete,
+                label: "Complete your clinic profile",
+                desc: "Add your phone number and address so patients trust your booking page.",
+                href: "/dashboard/settings",
+                cta: "Open settings",
+              },
+              {
+                done: onboarding.slotsCreated,
+                label: "Generate your first slots",
+                desc: "Create a week of appointment slots so patients have something to book.",
+                href: "/dashboard/slots",
+                cta: "Go to slots",
+              },
+              {
+                done: onboarding.hasPatient,
+                label: "Get your first patient",
+                desc: "Share your booking link — paste it on WhatsApp, Instagram bio, or Google Maps.",
+                href: clinicSlug ? `/book/${clinicSlug}` : "#",
+                cta: "Preview booking page",
+                external: true,
+              },
+            ].map((step, i) => (
+              <div key={i} className={`px-5 py-4 flex items-start gap-4 ${step.done ? "opacity-50" : ""}`}>
+                <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 text-xs font-bold ${step.done ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 text-slate-300"}`}>
+                  {step.done ? "✓" : i + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium ${step.done ? "line-through text-slate-400" : "text-slate-900"}`}>{step.label}</p>
+                  {!step.done && <p className="text-xs text-slate-500 mt-0.5">{step.desc}</p>}
+                </div>
+                {!step.done && (
+                  <a
+                    href={step.href}
+                    target={step.external ? "_blank" : undefined}
+                    rel={step.external ? "noreferrer" : undefined}
+                    className="shrink-0 px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                  >
+                    {step.cta}
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Today's operational stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
