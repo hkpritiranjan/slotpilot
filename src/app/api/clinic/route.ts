@@ -21,9 +21,16 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json();
   const { name, phone, address, appointmentTypes, slotDuration } = body;
 
+  const data: Record<string, unknown> = {};
+  if (name !== undefined) data.name = name;
+  if (phone !== undefined) data.phone = phone;
+  if (address !== undefined) data.address = address;
+  if (appointmentTypes !== undefined) data.appointmentTypes = appointmentTypes;
+  if (slotDuration !== undefined) data.slotDuration = slotDuration;
+
   const clinic = await db.clinic.update({
     where: { id: session.clinicId },
-    data: { name, phone, address, appointmentTypes, slotDuration },
+    data,
     select: { id: true, name: true, slug: true },
   });
 

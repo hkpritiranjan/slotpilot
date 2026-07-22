@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { parseApptTypes } from "@/lib/appointment-types";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -168,7 +169,7 @@ export default function CalendarPage() {
 
   useEffect(() => {
     fetch("/api/clinic").then(r => r.json()).then(d => {
-      if (d.appointmentTypes) setApptTypes(d.appointmentTypes.split(",").map((t: string) => t.trim()));
+      if (d.appointmentTypes) setApptTypes(parseApptTypes(d.appointmentTypes).map(t => t.name));
     }).catch(() => {});
   }, []);
 

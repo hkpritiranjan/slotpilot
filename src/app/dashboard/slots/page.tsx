@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { parseApptTypes } from "@/lib/appointment-types";
 
 interface Slot {
   id: string;
@@ -75,8 +76,9 @@ export default function SlotsPage() {
   useEffect(() => {
     fetch("/api/clinic").then(r => r.json()).then(d => {
       if (d?.appointmentTypes) {
-        setApptTypes(d.appointmentTypes.split(",").map((s: string) => s.trim()));
-        setForm(f => ({ ...f, appointmentType: d.appointmentTypes.split(",")[0].trim() }));
+        const parsed = parseApptTypes(d.appointmentTypes).map(t => t.name);
+        setApptTypes(parsed);
+        setForm(f => ({ ...f, appointmentType: parsed[0] ?? "" }));
       }
     });
   }, []);
@@ -126,6 +128,18 @@ export default function SlotsPage() {
     if (!confirm("Delete this slot?")) return;
     await fetch(`/api/slots/${slotId}`, { method: "DELETE" });
     await loadSlots();
+  }
+
+  async function offerToWaitlist(slotId: string) {
+    const res = await fetch(`/api/slots/${slotId}/notify`, { method: "POST" });
+    const data = await res.json();
+    if (data.notified) {
+      setActionMsg(`Offer sent to ${data.patientName} via WhatsApp!`);
+    } else {
+      setActionMsg("No matching patients on the waitlist right now.");
+    }
+    await loadSlots();
+    setTimeout(() => setActionMsg(""), 5000);
   }
 
   return (
@@ -217,6 +231,14 @@ export default function SlotsPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {slot.status === "available" && slot.notifications.length === 0 && (
+                        <button
+                          onClick={() => offerToWaitlist(slot.id)}
+                          className="px-2.5 py-1.5 text-xs border border-indigo-200 rounded-md hover:bg-indigo-50 text-indigo-600 font-medium"
+                        >
+                          Offer to waitlist
+                        </button>
+                      )}
                       {slot.status === "available" && (
                         <button
                           onClick={() => changeStatus(slot.id, "cancelled")}
