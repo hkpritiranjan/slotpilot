@@ -49,11 +49,16 @@ export default function DashboardPage() {
   const [todayStats, setTodayStats] = useState({ total: 0, booked: 0, available: 0, noShows: 0, waiting: 0 });
   const [recovery, setRecovery] = useState<RecoveryStats | null>(null);
   const [clinicName, setClinicName] = useState("");
+  const [clinicSlug, setClinicSlug] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
 
-    fetch("/api/clinic").then((r) => r.json()).then((d) => setClinicName(d?.name ?? ""));
+    fetch("/api/clinic").then((r) => r.json()).then((d) => {
+      setClinicName(d?.name ?? "");
+      setClinicSlug(d?.slug ?? "");
+    });
     fetch("/api/stats").then((r) => r.json()).then((d) => setRecovery(d));
 
     Promise.all([
@@ -194,6 +199,37 @@ export default function DashboardPage() {
           </ul>
         )}
       </div>
+
+      {/* Booking page share banner */}
+      {clinicSlug && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-5 py-4 mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-indigo-900">Your patient booking page</p>
+            <p className="text-xs text-indigo-600 mt-0.5 truncate">
+              {typeof window !== "undefined" ? window.location.origin : ""}/book/{clinicSlug}
+            </p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/book/${clinicSlug}`;
+                navigator.clipboard.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
+              }}
+              className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700"
+            >
+              {copied ? "Copied!" : "Copy link"}
+            </button>
+            <a
+              href={`/book/${clinicSlug}`}
+              target="_blank"
+              rel="noreferrer"
+              className="px-3 py-1.5 bg-white border border-indigo-300 text-indigo-700 text-xs font-medium rounded-lg hover:bg-indigo-50"
+            >
+              Preview
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* Quick links */}
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-4 gap-4">
